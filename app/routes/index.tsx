@@ -10,5 +10,5 @@ export async function loader({ request }: LoaderArgs) {
 export default function Index() {
   const data = useLoaderData<typeof loader>();
   console.log({ data });
-  return <div>Homepage</div>;
+  return <div className="bg-red-200">Homepage</div>;
 }
