@@ -18,14 +18,14 @@ type Image {
   thumbnail String
 }
 
-model Product {
+model products {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   color String
   qty Int
   brand String
   connectivity String?
   type String
-  variant String
+  variant String?
   price Int
   name String
   image Image
