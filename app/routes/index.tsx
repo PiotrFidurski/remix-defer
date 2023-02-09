@@ -1,36 +1,51 @@
-import { LoaderArgs } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { defer, LoaderArgs } from "@remix-run/node";
+import { Await, useLoaderData } from "@remix-run/react";
 import { db } from "db";
+import { Suspense } from "react";
 import { ProductCard } from "~/components/ProductCard";
+import { ProductCardSkeleton } from "~/components/ProductCardSekelton";
+import { delay, getKeyboards, getOtherProducts } from "~/queries.server";
 
 export async function loader({ request }: LoaderArgs) {
-  const data = await db.products.findMany();
+  const keyboards = await getKeyboards();
 
-  const keyboards = data.filter((product) => product.type === "keyboards");
-  const other = data.filter((product) => product.type !== "keyboards");
-  return {
+  const other = delay(3000).then(() => getOtherProducts().then((data) => data));
+
+  return defer({
     keyboards,
     other,
-  };
+  });
 }
 
 export default function Index() {
-  const products = useLoaderData<typeof loader>();
+  const { keyboards, other } = useLoaderData<typeof loader>();
 
   return (
     <>
-      <div className="bg-gray-400 p-4">
-        <div className="grid grid-cols-4 gap-4 max-w-6xl m-auto w-full">
-          {products?.keyboards?.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      </div>
       <div className="bg-gray-600 p-4">
         <div className="grid grid-cols-4 gap-4 max-w-6xl m-auto w-full">
-          {products?.other?.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+          <Suspense fallback={<div>loading...</div>}>
+            <Await resolve={keyboards}>
+              {(products) =>
+                products?.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))
+              }
+            </Await>
+          </Suspense>
+        </div>
+      </div>
+      <div className="bg-gray-400 p-4">
+        <div className="grid grid-cols-4 gap-4 max-w-6xl m-auto w-full">
+          <Suspense fallback={<ProductCardSkeleton />}>
+            <Await resolve={other} errorElement={<div>error</div>}>
+              {(products) =>
+                products?.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))
+              }
+            </Await>
+          </Suspense>
         </div>
       </div>
     </>
