@@ -1,12 +1,11 @@
-import { defer, LoaderArgs } from "@remix-run/node";
+import { defer } from "@remix-run/node";
 import { Await, useLoaderData } from "@remix-run/react";
-import { db } from "db";
 import { Suspense } from "react";
 import { ProductCard } from "~/components/ProductCard";
 import { ProductCardSkeleton } from "~/components/ProductCardSekelton";
 import { delay, getKeyboards, getOtherProducts } from "~/queries.server";
 
-export async function loader({ request }: LoaderArgs) {
+export async function loader() {
   const keyboards = await getKeyboards();
 
   const other = delay(3000).then(() => getOtherProducts().then((data) => data));
