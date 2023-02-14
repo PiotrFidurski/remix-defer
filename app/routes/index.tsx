@@ -3,12 +3,20 @@ import { Await, useLoaderData } from "@remix-run/react";
 import { Suspense } from "react";
 import { ProductCard } from "~/components/ProductCard";
 import { ProductCardSkeleton } from "~/components/ProductCardSekelton";
-import { delay, getKeyboards, getOtherProducts } from "~/queries.server";
+import { getKeyboards, getOtherProducts } from "~/queries.server";
+
+function slow<T>(data: T, ms: number) {
+  return new Promise<T>((resolve) =>
+    setTimeout(() => {
+      return resolve(data);
+    }, ms)
+  );
+}
 
 export async function loader() {
   const keyboards = await getKeyboards();
 
-  const other = delay(3000).then(() => getOtherProducts().then((data) => data));
+  const other = getOtherProducts().then((data) => slow(data, 2000));
 
   return defer({
     keyboards,
@@ -23,7 +31,7 @@ export default function Index() {
     <>
       <div className="bg-gray-600 p-4">
         <div className="grid grid-cols-4 gap-4 max-w-6xl m-auto w-full">
-          <Suspense fallback={<div>loading...</div>}>
+          <Suspense fallback={<ProductCardSkeleton />}>
             <Await resolve={keyboards}>
               {(products) =>
                 products?.map((product) => (
